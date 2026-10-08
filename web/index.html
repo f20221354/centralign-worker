@@ -64,7 +64,7 @@ footer{padding:36px 0 60px;color:var(--muted);font-size:14px;border-top:1px soli
 <body>
 <nav class="top"><div class="wrap">
   <a class="logo" href="#">Centr<span>Align</span></a>
-  <div class="links"><a href="#how" class="hide-sm">How it works</a><a href="#architecture" class="hide-sm">Architecture</a><a href="#demo">Video</a><a href="/console">Live demo</a></div>
+  <div class="links"><a href="#how" class="hide-sm">How it works</a><a href="#architecture" class="hide-sm">Architecture</a><a href="#demo">Video</a><a class="live" href="/console">Live demo</a></div>
 </div></nav>
 
 <header class="hero"><div class="wrap">
@@ -72,11 +72,12 @@ footer{padding:36px 0 60px;color:var(--muted);font-size:14px;border-top:1px soli
   <h1>Give the worker the goal. It figures out the work.</h1>
   <p class="lede">CentrAlign takes a one-line request, works out the steps, drives a real browser through a vendor portal and an internal ERP, recovers when things break, asks a human when policy says so, and only says “done” after an independent check proves it.</p>
   <div class="cta">
-    <a class="btn primary" href="/console">Try live demo →</a>
+    <a class="btn primary live" href="/console">Try live demo →</a>
     <a class="btn" href="#demo">▶ Watch demo</a>
     <a class="btn" href="#architecture">View architecture</a>
     <a class="btn" id="gh" href="https://github.com/guptamirnal4-netizen/centralign-worker">GitHub</a>
   </div>
+  <p id="liveMsg" role="status" hidden style="margin:16px 0 0;padding:12px 16px;border-radius:10px;border:1px solid var(--line);background:var(--card);max-width:820px"></p>
   <div class="prompt"><span class="who">You</span><span>“Find the latest invoice from Acme Corp, extract the amount and due date, enter it into our internal ERP, and tell me once it is done.”</span></div>
 </div></header>
 
@@ -160,5 +161,24 @@ crash + restart  ─▶ reconcile by idempotency key, then the same pipeline</di
 </div></section>
 
 <footer><div class="wrap">CentrAlign · take-home prototype · built with Python, FastAPI, Playwright, Pydantic and OpenAI-compatible LLM APIs.</div></footer>
+<script>
+// The console runs on the worker service (Render free tier sleeps when idle).
+// Check it before navigating, so nobody lands on a bare error page.
+document.querySelectorAll('a.live').forEach(a => a.addEventListener('click', async ev => {
+  ev.preventDefault();
+  const msg = document.getElementById('liveMsg');
+  msg.hidden = false;
+  msg.textContent = 'Connecting to the live worker… if it was idle it takes up to a minute to wake up.';
+  msg.scrollIntoView({block: 'center', behavior: 'smooth'});
+  const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 90000);
+  try {
+    const r = await fetch('/healthz', {signal: ctl.signal, cache: 'no-store'});
+    if (r.ok) { location.href = '/console'; return; }
+    throw new Error(r.status);
+  } catch (e) {
+    msg.innerHTML = 'The live worker is offline right now. <a href="#demo">Watch the recorded demo</a> of the same application instead, or try again later.';
+  } finally { clearTimeout(timer); }
+}));
+</script>
 </body>
 </html>
