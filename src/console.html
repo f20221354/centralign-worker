@@ -96,8 +96,8 @@ code{font-family:var(--mono);font-size:12px;background:var(--bg);padding:1px 5px
         <button class="primary" id="send">Send</button></div>
       </section>
       <section class="card attn" id="crashCard" hidden>
-        <h2>Worker process died</h2>
-        <p style="margin:0 0 8px">The run stopped mid-action. Restarting reconciles the last action against the ERP before doing anything else.</p>
+        <h2>Worker stopped</h2>
+        <p style="margin:0 0 8px" id="crashText">The run stopped mid-action. Restarting reconciles the last action against the ERP before doing anything else.</p>
         <button class="primary" id="resume">Restart worker</button>
       </section>
       <section class="card"><h2>Progress</h2><ul class="checklist" id="progress"><li class="todo"><span class="ico">○</span>Waiting for a goal</li></ul></section>
@@ -158,7 +158,7 @@ const KIND = {GOAL_CREATED:'info', GOAL_UNDERSTOOD:'info', ACTION_PROPOSED:'', P
   OBSERVATION_RECORDED:'', OUTCOME_CLASSIFIED:'', ACTION_COMPLETED:'good', INVOICE_SELECTED:'good', REPLANNED:'warn',
   RECOVERY_ATTEMPTED:'warn', REPLAN_REQUIRED:'warn', APPROVAL_REQUESTED:'warn', APPROVAL_GRANTED:'good', APPROVAL_REJECTED:'bad',
   APPROVAL_REVALIDATION:'info', APPROVAL_INVALIDATED:'bad', CLARIFICATION_REQUESTED:'warn', CLARIFICATION_RESOLVED:'good',
-  PROMPT_INJECTION_DETECTED:'bad', ACTION_REJECTED:'bad', WORKER_CRASHED:'bad', WORKER_RESUMED:'info', ACTION_RECONCILED:'good',
+  PROMPT_INJECTION_DETECTED:'bad', ACTION_REJECTED:'bad', WORKER_CRASHED:'bad', WORKER_PAUSED:'warn', WORKER_RESUMED:'info', ACTION_RECONCILED:'good',
   SIDE_EFFECT_NOT_FOUND:'warn', AGENT_REPORTED_DONE:'info', VERIFICATION_COMPLETED:'', RUN_COMPLETED:'good', RUN_FAILED:'bad'};
 
 function describe(e) {
@@ -184,6 +184,7 @@ function describe(e) {
     case 'PROMPT_INJECTION_DETECTED': return `${esc(p.invoice)}: “${esc(short((p.signals || []).join(' · '), 120))}” → ${esc(p.handling)}`;
     case 'REPLANNED': case 'REPLAN_REQUIRED': return esc(p.reason) + (p.error ? ' · ' + esc(short(p.error, 120)) : '');
     case 'WORKER_CRASHED': return esc(p.reason);
+    case 'WORKER_PAUSED': return esc(p.reason) + ' · ' + esc(p.resume);
     case 'WORKER_RESUMED': return `resumed from ${esc(p.previous_status)} · ${p.unrecorded_side_effects} unrecorded side effect(s) to reconcile`;
     case 'ACTION_RECONCILED': return `ERP record #${p.erp_id} found by idempotency key: ${esc(p.conclusion)}`;
     case 'SIDE_EFFECT_NOT_FOUND': return 'no ERP record for the key: safe to retry';

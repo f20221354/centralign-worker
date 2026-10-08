@@ -165,8 +165,8 @@ class BrowserExecutor:
             outcome = p.locator("main").get_attribute("data-outcome") or ""
             alert = p.get_by_role("alert")
             msg = alert.inner_text().strip() if alert.count() else ""
-            record = {r.locator("th").inner_text().strip(): r.locator("td").inner_text().strip()
-                      for r in p.locator("#record tr").all()}
+            record = {(r.locator("th").text_content() or "").strip(): (r.locator("td").text_content() or "").strip()
+                      for r in p.locator("#record tr").all()}  # text_content: raw text, unaffected by CSS case
             shot = self.shot(f"erp-{outcome or 'result'}")
             if outcome in ("created", "exists"):
                 return Observation(action_name=action, channel="browser", status=ObsStatus.SUCCESS, screenshot_path=shot,

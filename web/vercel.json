@@ -1,0 +1,12 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/console", "destination": "https://centralign-worker.onrender.com/console" },
+    { "source": "/api/:path*", "destination": "https://centralign-worker.onrender.com/api/:path*" },
+    { "source": "/portal", "destination": "https://centralign-worker.onrender.com/portal/" },
+    { "source": "/portal/:path*", "destination": "https://centralign-worker.onrender.com/portal/:path*" },
+    { "source": "/erp", "destination": "https://centralign-worker.onrender.com/erp/" },
+    { "source": "/erp/:path*", "destination": "https://centralign-worker.onrender.com/erp/:path*" },
+    { "source": "/healthz", "destination": "https://centralign-worker.onrender.com/healthz" }
+  ]
+}

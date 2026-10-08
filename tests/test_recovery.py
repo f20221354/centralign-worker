@@ -31,6 +31,7 @@ def test_happy_path(apis, store):
     rows = erp.search(vendor_name="Acme Corp", invoice_number="INV-1042")
     assert len(rows) == 1 and rows[0]["amount_paise"] == 4625050 and rows[0]["due_date"] == "2026-10-25"
     assert rows[0]["created_by"] == "ops (web)"  # written through the browser form
+    assert s.erp_record and s.erp_record["id"] == rows[0]["id"]  # the observation was read back correctly
 
 
 def test_transient_500_is_retried_and_each_attempt_logged(apis, store):

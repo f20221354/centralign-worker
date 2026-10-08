@@ -57,7 +57,8 @@ def apply(state: TaskState, tool: str, args: dict[str, Any], obs: Observation) -
             state.erp_record = hit
             notes.append("ALREADY_IN_ERP")
     elif tool == "create_internal_invoice":
-        rec = {ERP_FIELDS.get(k, k): v for k, v in d.get("record", {}).items()}
+        fields = {k.lower(): v for k, v in ERP_FIELDS.items()}
+        rec = {fields.get(k.lower(), k): v for k, v in d.get("record", {}).items()}
         if rec.get("id"):
             rec["id"] = int(rec["id"])
         state.erp_record = rec

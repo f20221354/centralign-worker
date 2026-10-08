@@ -38,7 +38,11 @@ def model_of(name: str) -> str:
     return os.environ.get(PROVIDERS[name][2], PROVIDERS[name][3])
 
 
-def _call(name: str, messages: list[Any], tools: list[Any] | None) -> Any:
+class LLMUnavailable(RuntimeError):
+    """Every provider failed: an infrastructure problem, not a task failure. The run pauses and can be resumed."""
+
+
+def _call(name: str, messages: list[Any], tools: list[Any] | None, temperature: float = 0) -> Any:
     gap = MIN_GAP.get(name, 0) - (time.time() - _last.get(name, 0))
     if gap > 0:
         time.sleep(gap)
@@ -47,14 +51,14 @@ def _call(name: str, messages: list[Any], tools: list[Any] | None) -> Any:
     client = openai.OpenAI(base_url=base, api_key=os.environ.get(key_env, "") if key_env else "ollama",
                            max_retries=0, timeout=120)
     kw: dict[str, Any] = {"tools": tools, "tool_choice": "auto"} if tools else {}
-    return client.chat.completions.create(model=model_of(name), messages=messages, temperature=0, **kw)
+    return client.chat.completions.create(model=model_of(name), messages=messages, temperature=temperature, **kw)
 
 
 def complete(messages: list[dict], tools: list[dict] | None = None) -> tuple[Any, str]:
     """First provider that answers wins. Rate limits are waited out (free tiers); hard errors fail over."""
     names = chain()
     if not names:
-        raise RuntimeError("no LLM provider configured: set GROQ_API_KEY, GEMINI_API_KEY or OPENAI_API_KEY")
+        raise LLMUnavailable("no LLM provider configured: set GROQ_API_KEY, GEMINI_API_KEY or OPENAI_API_KEY")
     waited, errors = 0.0, []
     while True:
         now, hard, hints = time.time(), False, []
@@ -62,7 +66,7 @@ def complete(messages: list[dict], tools: list[dict] | None = None) -> tuple[Any
         for name in ready:
             for attempt in range(3):
                 try:
-                    r = _call(name, messages, tools)
+                    r = _call(name, messages, tools, 0.4 if attempt else 0)
                     USAGE["calls"] += 1
                     USAGE["input_tokens"] += getattr(r.usage, "prompt_tokens", 0) or 0
                     USAGE["output_tokens"] += getattr(r.usage, "completion_tokens", 0) or 0
@@ -89,12 +93,16 @@ def complete(messages: list[dict], tools: list[dict] | None = None) -> tuple[Any
                     hard = True
                     time.sleep(2 ** attempt)
                 except openai.APIStatusError as e:
+                    if e.status_code == 400 and any(t in str(e) for t in ("Parsing failed", "tool_use_failed",
+                                                                          "failed_generation")):
+                        errors.append(f"{name}: unparseable model output")  # a generation glitch: sample again
+                        continue
                     errors.append(f"{name}: HTTP {e.status_code} {str(e.message)[:120]}")
                     hard = True
                     break
             _cooldown[name] = max(_cooldown.get(name, 0), time.time() + COOLDOWN_S)
         if hard or waited >= RATE_BUDGET_S:
-            raise RuntimeError("every LLM provider failed: " + "; ".join(errors[-6:]))
+            raise LLMUnavailable("every LLM provider failed: " + "; ".join(errors[-6:]))
         pause = min(max([20.0, *hints]), 90.0)
         time.sleep(pause)
         waited += pause

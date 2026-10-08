@@ -20,6 +20,7 @@ from typing import Any
 from pydantic import BaseModel, ValidationError
 
 from src.agent.agent import Agent
+from src.agent.client import LLMUnavailable
 from src.agent.tools import REGISTRY
 from src.contracts import (
     TERMINAL,
@@ -89,6 +90,11 @@ class Engine:
             self._loop(s)
         except SimulatedCrash:
             raise
+        except LLMUnavailable as e:  # the model is unreachable: pause, keep everything, resume later
+            s.status = RunStatus.INTERRUPTED
+            self.ev(s, "WORKER_PAUSED", {"reason": str(e)[:400], "resume": "restart the worker when an LLM "
+                                                                       "provider is available"})
+            self.store.save(s)
         except Exception as e:  # noqa: BLE001 - a run must end in a recorded state, whatever broke
             self._fail(s, f"runtime error: {type(e).__name__}: {e}"[:400])
         finally:
@@ -139,12 +145,12 @@ class Engine:
 
     # ================================================================== the pipeline
 
-    def _process(self, s: TaskState, raw: dict[str, Any]) -> None:
+    def _process(self, s: TaskState, raw: dict[str, Any], origin: str | None = None) -> None:
         s.step_index += 1
         action_id = f"a{s.step_index}-{uuid.uuid4().hex[:6]}"
         self.ev(s, "ACTION_PROPOSED", {"action_id": action_id, "tool": raw.get("tool_name"),
                                        "arguments": raw.get("arguments"), "rationale": raw.get("action_rationale"),
-                                       "model": getattr(self.agent, "last_provider", None) or "planner"})
+                                       "model": origin or getattr(self.agent, "last_provider", None) or "planner"})
         # 1. validation: registered tool, typed arguments, nothing extra (e.g. no `human_approved`)
         try:
             prop = ActionProposal.model_validate(raw)
@@ -357,7 +363,8 @@ class Engine:
             self.store.save(s)
             return True
         assert pending is not None
-        self._process(s, pending)  # the approved proposal goes through validation, policy and revalidation again
+        # the approved proposal goes through validation, policy and revalidation again
+        self._process(s, pending, origin="approved proposal, resubmitted by the runtime")
         self.store.save(s)
         return True
 
