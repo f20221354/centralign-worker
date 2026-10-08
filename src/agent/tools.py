@@ -6,8 +6,16 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from src.contracts import (AskHumanArgs, CreateInternalInvoiceArgs, ExtractInvoiceArgs, FinishArgs, ListInvoicesArgs,
-                           OpenInvoiceArgs, SearchInternalInvoicesArgs, SearchVendorArgs)
+from src.contracts import (
+    AskHumanArgs,
+    CreateInternalInvoiceArgs,
+    ExtractInvoiceArgs,
+    FinishArgs,
+    ListInvoicesArgs,
+    OpenInvoiceArgs,
+    SearchInternalInvoicesArgs,
+    SearchVendorArgs,
+)
 
 # name: (argument model, description, channel)
 REGISTRY: dict[str, tuple[type[BaseModel], str, str]] = {

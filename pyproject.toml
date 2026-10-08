@@ -1,0 +1,24 @@
+[project]
+name = "centralign-worker"
+version = "1.0.0"
+description = "CentrAlign: an autonomous AI task worker for accounts payable (take-home prototype)"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "BLE"]
+ignore = ["E501", "B008"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+check_untyped_defs = true
+plugins = ["pydantic.mypy"]

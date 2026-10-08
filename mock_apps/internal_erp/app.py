@@ -19,8 +19,22 @@ from typing import Any
 
 from fastapi import Depends, FastAPI, Form, Header, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from sqlalchemy import (BigInteger, Column, Float, Integer, MetaData, String, Table, UniqueConstraint, create_engine,
-                        func, insert, or_, select, update)
+from sqlalchemy import (
+    BigInteger,
+    Column,
+    Float,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    UniqueConstraint,
+    create_engine,
+    func,
+    insert,
+    or_,
+    select,
+    update,
+)
 from sqlalchemy.exc import IntegrityError
 
 DB_URL = os.environ.get("ERP_DATABASE_URL", "sqlite:///runs/erp.db")
@@ -90,7 +104,7 @@ def reset() -> None:
         for t in (invoices, settings, sessions):
             c.execute(t.delete())
         for s in SEED:
-            c.execute(insert(invoices).values(**s, vendor_key=vkey(s["vendor_name"]), created_by="seed",
+            c.execute(insert(invoices).values(**s, vendor_key=vkey(str(s["vendor_name"])), created_by="seed",
                                               created_at=time.time(), idempotency_key=None))
 
 
@@ -159,7 +173,7 @@ def same_or_conflict(old: Any, rec: dict) -> tuple[int, str, dict]:
     if o["invoice_number"] != rec["invoice_number"] or vkey(o["vendor_name"]) != rec["vendor_key"]:
         diffs.append("idempotency key belongs to a different invoice")
     if diffs:
-        raise Rejected(409, "conflict", "Conflict with existing invoice #%d: %s" % (o["id"], "; ".join(diffs)), o)
+        raise Rejected(409, "conflict", f"Conflict with existing invoice #{o['id']}: {'; '.join(diffs)}", o)
     return 200, "exists", o
 
 
@@ -174,8 +188,10 @@ def create(data: dict, created_by: str = "ops") -> tuple[int, str, dict]:
             return same_or_conflict(old, rec)
     try:
         with engine.begin() as c:
-            new_id = c.execute(insert(invoices).values(**rec, created_by=created_by, created_at=time.time())
-                               ).inserted_primary_key[0]
+            pk = c.execute(insert(invoices).values(**rec, created_by=created_by, created_at=time.time())
+                           ).inserted_primary_key
+            assert pk is not None
+            new_id = pk[0]
             row = c.execute(select(invoices).where(invoices.c.id == new_id)).first()
         return 201, "created", row_dict(row)
     except IntegrityError:  # lost a race with an identical concurrent submit: the constraint decides

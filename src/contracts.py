@@ -7,9 +7,9 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from decimal import Decimal, InvalidOperation
-from enum import Enum
+from enum import StrEnum
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -39,7 +39,7 @@ def fmt_inr(paise: int) -> str:
     s = str(rupees)
     if len(s) > 3:
         head, tail = s[:-3], s[-3:]
-        groups = []
+        groups: list[str] = []
         while len(head) > 2:
             groups.insert(0, head[-2:])
             head = head[:-2]
@@ -63,7 +63,7 @@ def norm(s: str) -> str:
 
 
 def now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="milliseconds")
+    return datetime.now(UTC).isoformat(timespec="milliseconds")
 
 
 class Strict(BaseModel):
@@ -175,7 +175,7 @@ class ActionProposal(Strict):
 # ---------------------------------------------------------------- observations
 
 
-class ObsStatus(str, Enum):
+class ObsStatus(StrEnum):
     SUCCESS = "SUCCESS"
     HTTP_ERROR = "HTTP_ERROR"            # 5xx, timeout, network: transient
     DOM_ERROR = "DOM_ERROR"              # expected element missing: the UI changed
@@ -203,7 +203,7 @@ class Observation(Strict):
         return f"{self.status.value}{err} data={body}"
 
 
-class Outcome(str, Enum):
+class Outcome(StrEnum):
     CONTINUE = "CONTINUE"
     RETRY = "RETRY"
     ADAPT = "ADAPT"
@@ -215,7 +215,7 @@ class Outcome(str, Enum):
 # ---------------------------------------------------------------- state
 
 
-class RunStatus(str, Enum):
+class RunStatus(StrEnum):
     PLANNING = "PLANNING"
     RUNNING = "RUNNING"
     WAITING_APPROVAL = "WAITING_APPROVAL"

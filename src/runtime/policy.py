@@ -57,6 +57,10 @@ def source_diffs(args: CreateInternalInvoiceArgs, src: dict[str, Any]) -> list[s
 def evaluate(tool: str, args: BaseModel, state: TaskState, approvals: list[ApprovalSnapshot]) -> Decision:
     if tool not in ALLOWED_TOOLS:
         return Decision("DENY", f"tool '{tool}' is not on the allowlist")
+    if tool == "ask_human" and re.search(r"\bapprov", getattr(args, "question", ""), re.I):
+        # A free-text answer is not an approval: no snapshot, no time-of-use check. Approvals go through the gate.
+        return Decision("DENY", "approvals are not requested with ask_human; propose create_internal_invoice and "
+                        "the policy gate requests a recorded approval if one is required")
     if tool != "create_internal_invoice":
         return Decision("ALLOW")
     assert isinstance(args, CreateInternalInvoiceArgs)

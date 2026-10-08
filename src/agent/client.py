@@ -28,14 +28,14 @@ _cooldown: dict[str, float] = {}
 
 def chain() -> list[str]:
     names = [n.strip() for n in os.environ.get("LLM_CHAIN", "groq,gemini,openai,mistral,openrouter").split(",")]
-    return [n for n in names if n in PROVIDERS and (PROVIDERS[n][1] is None or os.environ.get(PROVIDERS[n][1]))]
+    return [n for n in names if n in PROVIDERS and ((key := PROVIDERS[n][1]) is None or os.environ.get(key))]
 
 
 def model_of(name: str) -> str:
     return os.environ.get(PROVIDERS[name][2], PROVIDERS[name][3])
 
 
-def _call(name: str, messages: list[dict], tools: list[dict] | None) -> Any:
+def _call(name: str, messages: list[Any], tools: list[Any] | None) -> Any:
     gap = MIN_GAP.get(name, 0) - (time.time() - _last.get(name, 0))
     if gap > 0:
         time.sleep(gap)
@@ -70,13 +70,14 @@ def complete(messages: list[dict], tools: list[dict] | None = None) -> tuple[Any
                         errors.append(f"{name}: out of credits")
                         _cooldown[name] = time.time() + 3600
                         break
-                    wait = e.response.headers.get("retry-after")
                     try:
-                        hints.append(float(wait))
-                    except (TypeError, ValueError):
+                        wait: float | None = float(e.response.headers.get("retry-after") or "")
+                    except ValueError:
                         wait = None
-                    if wait and float(wait) <= MAX_WAIT_S and attempt < 2:
-                        time.sleep(float(wait) + 0.5)
+                    if wait is not None:
+                        hints.append(wait)
+                    if wait is not None and wait <= MAX_WAIT_S and attempt < 2:
+                        time.sleep(wait + 0.5)
                         continue
                     errors.append(f"{name}: rate limited")
                     break

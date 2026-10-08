@@ -12,17 +12,32 @@ from __future__ import annotations
 import os
 import time
 import uuid
+from collections.abc import Callable
 from datetime import date
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
 from src.agent.agent import Agent
 from src.agent.tools import REGISTRY
-from src.contracts import (TERMINAL, ActionProposal, ApprovalSnapshot, CreateInternalInvoiceArgs, Observation,
-                           ObsStatus, Outcome, RunStatus, StepRecord, TaskState, fmt_inr, idempotency_key, now_iso,
-                           stable_hash, to_paise)
+from src.contracts import (
+    TERMINAL,
+    ActionProposal,
+    ApprovalSnapshot,
+    CreateInternalInvoiceArgs,
+    Observation,
+    ObsStatus,
+    Outcome,
+    RunStatus,
+    StepRecord,
+    TaskState,
+    fmt_inr,
+    idempotency_key,
+    now_iso,
+    stable_hash,
+    to_paise,
+)
 from src.execution.api_executor import ERPAPI, PortalAPI, search_internal
 from src.execution.browser_executor import BrowserExecutor
 from src.execution.file_executor import injection_signals, pdf_text, save_pdf
@@ -136,7 +151,7 @@ class Engine:
         except ValidationError as e:
             errs = "; ".join(f"{'.'.join(map(str, x['loc']))}: {x['msg']}" for x in e.errors()[:4])
             self.ev(s, "ACTION_REJECTED", {"action_id": action_id, "stage": "validation", "errors": errs})
-            fake = ActionProposal.model_construct(tool_name=str(raw.get("tool_name")),
+            fake = ActionProposal.model_construct(tool_name=str(raw.get("tool_name")),  # type: ignore[arg-type]
                                                   arguments=raw.get("arguments") or {},
                                                   action_rationale=str(raw.get("action_rationale", "")))
             self._record(s, action_id, fake, "VALIDATION_ERROR", "REPLAN", errs)

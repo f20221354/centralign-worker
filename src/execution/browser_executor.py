@@ -84,7 +84,8 @@ class BrowserExecutor:
             p.get_by_role("button", name="Search").click()
             p.wait_for_load_state()
             rows = p.locator("#results tr").all()[1:]
-            hits = [dict(zip(["vendor_id", "name", "city"], [c.inner_text().strip() for c in r.locator("td").all()]))
+            hits = [dict(zip(["vendor_id", "name", "city"], [c.inner_text().strip() for c in r.locator("td").all()],
+                             strict=False))
                     for r in rows]
             return Observation(action_name="search_vendor", channel="browser",
                                status=ObsStatus.SUCCESS if hits else ObsStatus.NOT_FOUND,
@@ -100,7 +101,7 @@ class BrowserExecutor:
                 return Observation(action_name="list_invoices", channel="browser", status=ObsStatus.NOT_FOUND,
                                    http_status=404, error_message=f"vendor {vendor_id} not found")
             keys = ["invoice_number", "invoice_date", "due_date", "amount", "status"]
-            rows = [dict(zip(keys, [c.inner_text().strip() for c in r.locator("td").all()]))
+            rows = [dict(zip(keys, [c.inner_text().strip() for c in r.locator("td").all()], strict=False))
                     for r in p.locator("#invoices tr").all()[1:]]
             return Observation(action_name="list_invoices", channel="browser", status=ObsStatus.SUCCESS,
                                data={"vendor_id": vendor_id, "vendor_name": p.locator("h1").inner_text().strip(),
