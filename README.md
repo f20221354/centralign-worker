@@ -16,8 +16,8 @@ against the source.
 
 ## Demo
 
-- **Live demo:** LIVE_URL (landing page) → **Try live demo** (`/console`)
-- **Video (3–5 min):** VIDEO_URL
+- **Live demo:** https://centralign-task-worker.vercel.app → **Try live demo** (`/console`)
+- **Video (4.5 min):** https://centralign-task-worker.vercel.app/centralign-demo.mp4 (also embedded on the landing page; source: `web/centralign-demo.mp4`)
 - **Live ERP / portal (synthetic data):** `/erp` (login `ops` / `northwind-demo`), `/portal`
 
 The live demo needs no credentials. It runs one task at a time, and free-tier LLM quotas apply, so a run can take

@@ -154,6 +154,9 @@ def build() -> None:
         (m["run_clicked"] - 2, "A different vendor, and a constraint: ask me before entering anything above fifty "
                                "thousand rupees."),
         (first(e, "INVOICE_SELECTED"), "The latest Gamma invoice is seventy-five thousand rupees."),
+        (first(e, "POLICY_EVALUATED", where=lambda p: p.get("tool") == "ask_human" and p.get("decision") == "DENY"),
+         "The model tries to ask me for approval in a chat message. Policy refuses: a chat answer is not a "
+         "recorded approval."),
         (m.get("approve_click", 0) - 5, "So policy pauses the run and shows me the facts. The model can't approve "
                                         "anything itself, and a stored approval is tied to these exact values."),
         (first(e, "APPROVAL_REVALIDATION"), "After I approve, the worker re-reads the live facts before writing, so a "
