@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CentrAlign Console</title>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--fg:#14161a;--muted:#5d6573;--line:#e3e6eb;--accent:#0f766e;--accent-2:#ccfbf1;
+--warn:#b45309;--warn-bg:#fef3c7;--bad:#b91c1c;--bad-bg:#fee2e2;--ok:#15803d;--ok-bg:#dcfce7;--info:#1d4ed8;--info-bg:#dbeafe;
+--mono:ui-monospace,SFMono-Regular,Menlo,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0e1116;--card:#161a21;--fg:#e8eaee;--muted:#9aa3b2;
+--line:#262c36;--accent:#2dd4bf;--accent-2:#134e4a;--warn:#fbbf24;--warn-bg:#3a2a0a;--bad:#f87171;--bad-bg:#3b1414;--ok:#4ade80;
+--ok-bg:#0f2e1b;--info:#93c5fd;--info-bg:#132447}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 -apple-system,Segoe UI,Inter,Helvetica,Arial,sans-serif}
+header{display:flex;align-items:center;gap:18px;padding:12px 22px;border-bottom:1px solid var(--line);background:var(--card);flex-wrap:wrap}
+header .brand{font-weight:800;font-size:18px;letter-spacing:-.01em}header .brand span{color:var(--accent)}
+header .sub{color:var(--muted)}header nav{margin-left:auto;display:flex;gap:14px;flex-wrap:wrap}header a{color:var(--muted);text-decoration:none}
+header a:hover{color:var(--fg)}
+main{max-width:1380px;margin:0 auto;padding:18px 16px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px}
+h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+textarea{width:100%;min-height:64px;font:inherit;font-size:15px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;
+background:var(--bg);color:var(--fg);resize:vertical}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button,select{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) button.primary{color:#04201d}}
+button:disabled{opacity:.5;cursor:not-allowed}
+.toggles{display:flex;gap:16px;flex-wrap:wrap;color:var(--muted);font-size:13px;margin-top:10px}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:14px}
+@media (max-width:980px){.grid{grid-template-columns:1fr}}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-weight:700;font-size:12px;background:var(--info-bg);color:var(--info)}
+.pill.COMPLETED{background:var(--ok-bg);color:var(--ok)}.pill.FAILED{background:var(--bad-bg);color:var(--bad)}
+.pill.WAITING_APPROVAL,.pill.WAITING_HUMAN,.pill.INTERRUPTED{background:var(--warn-bg);color:var(--warn)}
+.checklist{list-style:none;margin:0;padding:0}.checklist li{padding:4px 0;display:flex;gap:10px;align-items:center}
+.ico{width:20px;text-align:center;font-weight:800}.done .ico{color:var(--ok)}.warn .ico,.wait .ico{color:var(--warn)}
+.fail .ico{color:var(--bad)}.todo{color:var(--muted)}
+.kv{display:grid;grid-template-columns:130px 1fr;gap:4px 12px}.kv dt{color:var(--muted)}.kv dd{margin:0;font-weight:600;word-break:break-word}
+.attn{border:2px solid var(--warn);background:var(--warn-bg)}
+.attn h2{color:var(--warn)}
+.screen{width:100%;border-radius:8px;border:1px solid var(--line);display:block;background:#fff;min-height:120px}
+.timeline{max-height:520px;overflow:auto;font-size:13px}
+.ev{display:grid;grid-template-columns:62px 190px 1fr;gap:8px;padding:5px 2px;border-bottom:1px dashed var(--line)}
+@media (max-width:640px){.ev{grid-template-columns:56px 1fr}.ev .d{grid-column:1/-1}}
+.ev .t{color:var(--muted);font-family:var(--mono);font-size:12px}.ev .k{font-family:var(--mono);font-weight:700;font-size:12px}
+.ev.bad .k{color:var(--bad)}.ev.good .k{color:var(--ok)}.ev.warn .k{color:var(--warn)}.ev.info .k{color:var(--info)}
+.ev .d{color:var(--fg);word-break:break-word}.muted{color:var(--muted)}
+.checks{width:100%;border-collapse:collapse;font-size:13px}.checks td{padding:5px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.rationale{font-style:italic;color:var(--muted)}
+code{font-family:var(--mono);font-size:12px;background:var(--bg);padding:1px 5px;border-radius:4px}
+#msg{color:var(--bad)}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Centr<span>Align</span></div><div class="sub">Autonomous Task Worker · operator console</div>
+  <nav><a href="/portal/" target="_blank">Vendor portal ↗</a><a href="/erp/invoices" target="_blank">Internal ERP ↗</a>
+  <a id="archLink" href="https://github.com/" target="_blank">Architecture ↗</a></nav>
+</header>
+<main>
+  <section class="card">
+    <h2>Give the worker a goal</h2>
+    <textarea id="goal" placeholder="e.g. Find the latest invoice from Acme Corp, extract the amount and due date, enter it into our internal ERP, and tell me once it is done."></textarea>
+    <div class="row" style="margin-top:10px">
+      <button id="loadEx">Load example task</button>
+      <select id="examples" aria-label="Example tasks"></select>
+      <button id="run" class="primary">Run worker</button>
+      <span id="msg"></span>
+    </div>
+    <div class="toggles">
+      <span>Failure injection:</span>
+      <label><input type="checkbox" id="inject_500"> ERP returns HTTP 500 on the first submit</label>
+      <label><input type="checkbox" id="rename_button"> ERP renames its submit button</label>
+      <label><input type="checkbox" id="crash_after_submit"> Worker crashes right after the ERP write</label>
+    </div>
+  </section>
+
+  <div class="grid">
+    <div>
+      <section class="card" id="statusCard">
+        <h2>Status</h2>
+        <div class="row"><span id="status" class="pill">IDLE</span><span id="runid" class="muted"></span></div>
+        <div id="current" style="margin-top:10px" class="muted">No run yet. Load an example and press Run worker.</div>
+      </section>
+      <section class="card attn" id="approvalCard" hidden>
+        <h2>Approval needed</h2>
+        <dl class="kv" id="approvalKv"></dl>
+        <p id="approvalReason" class="muted" style="margin:8px 0"></p>
+        <div class="row"><button class="primary" id="approve">Approve</button><button id="reject">Reject</button></div>
+      </section>
+      <section class="card attn" id="questionCard" hidden>
+        <h2>The worker has a question</h2>
+        <p id="questionText" style="margin:0 0 8px"></p>
+        <div class="row"><input id="answer" style="flex:1;min-width:200px;font:inherit;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg)" placeholder="Your answer">
+        <button class="primary" id="send">Send</button></div>
+      </section>
+      <section class="card attn" id="crashCard" hidden>
+        <h2>Worker process died</h2>
+        <p style="margin:0 0 8px">The run stopped mid-action. Restarting reconciles the last action against the ERP before doing anything else.</p>
+        <button class="primary" id="resume">Restart worker</button>
+      </section>
+      <section class="card"><h2>Progress</h2><ul class="checklist" id="progress"><li class="todo"><span class="ico">○</span>Waiting for a goal</li></ul></section>
+      <section class="card" id="goalCard" hidden><h2>Goal, as the worker understood it</h2><dl class="kv" id="goalKv"></dl></section>
+      <section class="card" id="evidenceCard" hidden>
+        <h2>Result &amp; evidence</h2>
+        <p id="summary" style="margin:0 0 10px"></p>
+        <dl class="kv" id="evidenceKv"></dl>
+        <h2 style="margin-top:14px">Independent verification</h2>
+        <table class="checks" id="checks"></table>
+      </section>
+    </div>
+    <div>
+      <section class="card"><h2>Worker's screen <span class="muted" style="text-transform:none;letter-spacing:0">(real browser, updated after each action)</span></h2>
+        <img id="screen" class="screen" alt="The worker's browser"></section>
+      <section class="card"><h2>Execution trace</h2><div class="timeline" id="timeline"><div class="muted">Events appear here as the worker runs.</div></div></section>
+    </div>
+  </div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+let run = null, last = 0, examples = [], shotTick = 0, finished = false;
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const time = ts => new Date(ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+const short = (o, n = 160) => { const s = typeof o === 'string' ? o : JSON.stringify(o); return s.length > n ? s.slice(0, n) + '…' : s; };
+
+async function loadExamples() {
+  try { examples = await (await fetch('/api/examples')).json(); } catch { examples = []; }
+  $('examples').innerHTML = examples.map(e => `<option value="${e.id}">${esc(e.id + ' · ' + e.label)}</option>`).join('');
+}
+$('loadEx').onclick = () => { const e = examples.find(x => x.id === $('examples').value) || examples[0]; if (e) $('goal').value = e.goal; };
+$('examples').onchange = $('loadEx').onclick;
+
+$('run').onclick = async () => {
+  $('msg').textContent = '';
+  const body = {goal: $('goal').value.trim(), inject_500: $('inject_500').checked,
+                rename_button: $('rename_button').checked, crash_after_submit: $('crash_after_submit').checked};
+  if (body.goal.length < 10) { $('msg').textContent = 'Type a goal or load an example first.'; return; }
+  const r = await fetch('/api/runs', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify(body)});
+  const d = await r.json();
+  if (!r.ok) { $('msg').textContent = d.detail || 'Could not start'; return; }
+  run = d.run_id; last = 0; finished = false;
+  try { sessionStorage.setItem('run', run); } catch {}
+  $('timeline').innerHTML = ''; $('evidenceCard').hidden = true; $('goalCard').hidden = true;
+  $('screen').removeAttribute('src');
+};
+
+async function post(url, body) {
+  const r = await fetch(url, {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify(body)});
+  if (!r.ok) { const d = await r.json().catch(() => ({})); $('msg').textContent = d.detail || 'Request failed'; }
+}
+$('approve').onclick = () => { $('approvalCard').hidden = true; post(`/api/approvals/${$('approve').dataset.id}`, {approve: true, note: 'approved in console'}); };
+$('reject').onclick = () => { $('approvalCard').hidden = true; post(`/api/approvals/${$('approve').dataset.id}`, {approve: false, note: 'rejected in console'}); };
+$('send').onclick = () => { const a = $('answer').value.trim(); if (!a) return; $('questionCard').hidden = true; post(`/api/questions/${$('send').dataset.id}`, {answer: a}); $('answer').value = ''; };
+$('resume').onclick = () => { $('crashCard').hidden = true; post(`/api/runs/${run}/resume`, {}); };
+
+const KIND = {GOAL_CREATED:'info', GOAL_UNDERSTOOD:'info', ACTION_PROPOSED:'', POLICY_EVALUATED:'', ACTION_STARTED:'',
+  OBSERVATION_RECORDED:'', OUTCOME_CLASSIFIED:'', ACTION_COMPLETED:'good', INVOICE_SELECTED:'good', REPLANNED:'warn',
+  RECOVERY_ATTEMPTED:'warn', REPLAN_REQUIRED:'warn', APPROVAL_REQUESTED:'warn', APPROVAL_GRANTED:'good', APPROVAL_REJECTED:'bad',
+  APPROVAL_REVALIDATION:'info', APPROVAL_INVALIDATED:'bad', CLARIFICATION_REQUESTED:'warn', CLARIFICATION_RESOLVED:'good',
+  PROMPT_INJECTION_DETECTED:'bad', ACTION_REJECTED:'bad', WORKER_CRASHED:'bad', WORKER_RESUMED:'info', ACTION_RECONCILED:'good',
+  SIDE_EFFECT_NOT_FOUND:'warn', AGENT_REPORTED_DONE:'info', VERIFICATION_COMPLETED:'', RUN_COMPLETED:'good', RUN_FAILED:'bad'};
+
+function describe(e) {
+  const p = e.payload || {};
+  switch (e.event_type) {
+    case 'GOAL_CREATED': return `“${esc(p.goal)}”` + (Object.keys(p.scenario || {}).length ? ` <span class="muted">scenario: ${esc(Object.keys(p.scenario).join(', '))}</span>` : '');
+    case 'GOAL_UNDERSTOOD': return `vendor <b>${esc(p.goal_spec.vendor_name)}</b> · ${esc(p.goal_spec.mode)} · approval above ${esc(p.approval_threshold)}`;
+    case 'ACTION_PROPOSED': return `<b>${esc(p.tool)}</b> <code>${esc(short(p.arguments, 120))}</code><br><span class="rationale">${esc(p.rationale)}</span>`;
+    case 'ACTION_REJECTED': return `rejected at ${esc(p.stage)}: ${esc(p.errors)}`;
+    case 'POLICY_EVALUATED': return `${esc(p.tool)} → <b>${esc(p.decision)}</b>${p.reason ? ' · ' + esc(p.reason) : ''}`;
+    case 'ACTION_STARTED': return `${esc(p.tool)} via ${esc(p.channel)}${e.attempt_index > 1 ? ` · <b>attempt ${e.attempt_index}</b>` : ''}${p.side_effect ? ' · side effect, key <code>' + esc((p.idempotency_key || '').slice(0, 10)) + '…</code>' : ''}`;
+    case 'OBSERVATION_RECORDED': return `<b>${esc(p.status)}</b>${p.http_status ? ' HTTP ' + p.http_status : ''}${p.error_message ? ' · ' + esc(short(p.error_message, 140)) : ''}${p.screenshot ? ` · <a href="/api/runs/${run}/shots/${esc(p.screenshot)}" target="_blank">screenshot</a>` : ''}`;
+    case 'OUTCOME_CLASSIFIED': return `${esc(p.status)} → <b>${esc(p.outcome)}</b>${p.why ? ' · ' + esc(p.why) : ''}`;
+    case 'RECOVERY_ATTEMPTED': return p.strategy === 'retry' ? `retry → attempt ${p.next_attempt} after ${p.backoff_s}s` : `adapt: ${esc(p.reason)} · page offers ${esc(short((p.observed || {}).available_buttons))}`;
+    case 'INVOICE_SELECTED': return `<b>${esc(p.invoice_number)}</b> ${p.is_latest_by_date ? '(latest by invoice date ✓)' : '(NOT the latest by date: ' + esc(p.latest_by_date) + ')'} <span class="rationale">${esc(p.rationale)}</span>`;
+    case 'ACTION_COMPLETED': return `${esc(p.tool)} done${p.attempts > 1 ? ' after ' + p.attempts + ' attempts' : ''}`;
+    case 'APPROVAL_REQUESTED': return `${esc(p.invoice)} · ${esc(p.amount)} · ${esc(p.reason)}`;
+    case 'APPROVAL_GRANTED': case 'APPROVAL_REJECTED': return `by a human (${esc(p.note)})`;
+    case 'APPROVAL_REVALIDATION': return 're-fetched live facts from the portal and ERP before using the approval';
+    case 'APPROVAL_INVALIDATED': return esc(p.reason);
+    case 'CLARIFICATION_REQUESTED': return esc(p.question);
+    case 'CLARIFICATION_RESOLVED': return esc(p.answer);
+    case 'PROMPT_INJECTION_DETECTED': return `${esc(p.invoice)}: “${esc(short((p.signals || []).join(' · '), 120))}” → ${esc(p.handling)}`;
+    case 'REPLANNED': case 'REPLAN_REQUIRED': return esc(p.reason) + (p.error ? ' · ' + esc(short(p.error, 120)) : '');
+    case 'WORKER_CRASHED': return esc(p.reason);
+    case 'WORKER_RESUMED': return `resumed from ${esc(p.previous_status)} · ${p.unrecorded_side_effects} unrecorded side effect(s) to reconcile`;
+    case 'ACTION_RECONCILED': return `ERP record #${p.erp_id} found by idempotency key: ${esc(p.conclusion)}`;
+    case 'SIDE_EFFECT_NOT_FOUND': return 'no ERP record for the key: safe to retry';
+    case 'AGENT_REPORTED_DONE': return `${esc(p.outcome)} · <span class="muted">${esc(p.note)}</span>`;
+    case 'VERIFICATION_COMPLETED': return `<b>${p.passed ? 'PASSED' : 'FAILED'}</b> · ${(p.checks || []).filter(c => c.passed).length}/${(p.checks || []).length} checks`;
+    case 'RUN_COMPLETED': return 'verified and complete';
+    case 'RUN_FAILED': return esc(p.reason);
+    default: return esc(short(p));
+  }
+}
+
+function render(d) {
+  $('status').textContent = d.status; $('status').className = 'pill ' + d.status;
+  $('runid').textContent = 'run ' + d.run_id + (d.alive ? ' · working…' : '');
+  const c = d.current;
+  $('current').innerHTML = c ? `Step ${c.step_index}: <b>${esc(c.tool_name)}</b> <code>${esc(short(c.arguments, 110))}</code> → ${esc(c.status)}<br><span class="rationale">${esc(c.rationale)}</span>`
+    : (d.status === 'PLANNING' ? 'Understanding the goal…' : '');
+  $('progress').innerHTML = d.progress.map(p => `<li class="${p.state}"><span class="ico">${{done:'✓', todo:'○', warn:'⚠', wait:'⏳', fail:'✗'}[p.state]}</span>${esc(p.label)}</li>`).join('');
+  if (d.goal_spec) {
+    const g = d.goal_spec; $('goalCard').hidden = false;
+    $('goalKv').innerHTML = `<dt>Objective</dt><dd>${esc(g.objective)}</dd><dt>Vendor</dt><dd>${esc(g.vendor_name)}</dd><dt>Invoice</dt><dd>${esc(g.invoice_selector)}</dd><dt>Mode</dt><dd>${esc(g.mode)}</dd><dt>Success when</dt><dd>${(g.success_criteria || []).map(esc).join('<br>')}</dd>` + (g.constraints && g.constraints.length ? `<dt>Constraints</dt><dd>${g.constraints.map(esc).join('<br>')}</dd>` : '');
+  }
+  const a = d.pending_approval;
+  $('approvalCard').hidden = !a;
+  if (a) {
+    const p = a.parameters;
+    $('approve').dataset.id = a.approval_id;
+    $('approvalKv').innerHTML = `<dt>Invoice</dt><dd>${esc(p.invoice_number)}</dd><dt>Vendor</dt><dd>${esc(a.critical_state_facts.vendor_name)}</dd><dt>Amount</dt><dd>₹${(p.amount_paise / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</dd><dt>Due date</dt><dd>${esc(p.due_date)}</dd><dt>Action requested</dt><dd>Create this invoice in ERP</dd>`;
+    $('approvalReason').textContent = 'Policy ' + a.policy_version + ': amount above the approval threshold. Facts are re-checked live before the write.';
+  }
+  const q = d.pending_question;
+  $('questionCard').hidden = !q;
+  if (q) { $('questionText').textContent = q.question; $('send').dataset.id = q.question_id; }
+  $('crashCard').hidden = !(d.status === 'INTERRUPTED' && !d.alive);
+  for (const e of d.events) {
+    if (last === 0) $('timeline').innerHTML = '';
+    last = Math.max(last, e.id);
+    const div = document.createElement('div');
+    div.className = 'ev ' + (KIND[e.event_type] || '');
+    div.innerHTML = `<span class="t">${time(e.timestamp)}</span><span class="k">${esc(e.event_type)}</span><span class="d">${describe(e)}</span>`;
+    $('timeline').appendChild(div);
+    $('timeline').scrollTop = $('timeline').scrollHeight;
+  }
+  if (d.has_live && (d.alive || !finished)) $('screen').src = `/api/runs/${d.run_id}/live.png?t=${++shotTick}`;
+  const v = d.verification;
+  if (v && v.evidence) {
+    $('evidenceCard').hidden = false;
+    $('summary').innerHTML = `<b>Worker's report:</b> ${esc(d.final_summary || '')}`;
+    const ev = v.evidence;
+    $('evidenceKv').innerHTML = Object.entries({Vendor: ev.vendor, Invoice: ev.invoice, 'Invoice date': ev.invoice_date, Amount: ev.amount, 'Due date': ev.due_date, 'ERP record': ev.erp_record, Verification: ev.verification, Attempts: ev.tool_attempts, Approval: ev.approval})
+      .map(([k, val]) => `<dt>${k}</dt><dd>${esc(val)}</dd>`).join('') + (ev.erp_url ? `<dt>ERP link</dt><dd><a href="${esc(ev.erp_url.replace(/^https?:\/\/[^/]+/, ''))}" target="_blank">open record ↗</a></dd>` : '');
+    $('checks').innerHTML = v.checks.map(c => `<tr><td>${c.passed ? '✅' : '❌'}</td><td>${esc(c.name)}</td><td class="muted">${esc(c.detail)}</td></tr>`).join('');
+  }
+  finished = ['COMPLETED', 'FAILED'].includes(d.status) && !d.alive;
+}
+
+async function poll() {
+  try {
+    if (!run) {
+      let saved = null; try { saved = sessionStorage.getItem('run'); } catch {}
+      if (saved) run = saved;
+      else { const rs = await (await fetch('/api/runs')).json(); if (rs.length) run = rs[0].run_id; }
+    }
+    if (run) {
+      const r = await fetch(`/api/runs/${run}?after=${last}`);
+      if (r.ok) render(await r.json()); else if (r.status === 404) { run = null; try { sessionStorage.removeItem('run'); } catch {} }
+    }
+  } catch {}
+  setTimeout(poll, finished ? 4000 : 1200);
+}
+loadExamples().then(() => { if (!$('goal').value) $('loadEx').onclick(); });
+poll();
+</script>
+</body>
+</html>

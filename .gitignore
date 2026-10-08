@@ -1,0 +1,12 @@
+.env
+.env.local
+.venv/
+__pycache__/
+*.pyc
+runs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.vercel
+scripts/demo_video/out/
+scripts/demo_video/work/
