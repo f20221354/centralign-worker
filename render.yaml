@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: centralign-worker
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: LLM_CHAIN
+        value: groq,groq_small,gemini,openai
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ERP_API_KEY
+        generateValue: true
+      - key: PORTAL_API_KEY
+        generateValue: true
+      - key: RUNS_PER_HOUR
+        value: "20"

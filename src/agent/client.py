@@ -11,6 +11,9 @@ import openai
 # name: (base_url, api-key env var, model env var, default model)
 PROVIDERS = {
     "groq": ("https://api.groq.com/openai/v1", "GROQ_API_KEY", "GROQ_MODEL", "openai/gpt-oss-120b"),
+    # same key, a smaller model: Groq quotas are per model, so this keeps a free-tier demo going after the
+    # big model's daily token quota is spent
+    "groq_small": ("https://api.groq.com/openai/v1", "GROQ_API_KEY", "GROQ_SMALL_MODEL", "openai/gpt-oss-20b"),
     "gemini": ("https://generativelanguage.googleapis.com/v1beta/openai/", "GEMINI_API_KEY", "GEMINI_MODEL",
                "gemini-2.5-flash"),
     "openai": ("https://api.openai.com/v1", "OPENAI_API_KEY", "OPENAI_MODEL", "gpt-4.1-mini"),
@@ -19,7 +22,7 @@ PROVIDERS = {
                    "openai/gpt-oss-120b:free"),
     "ollama": (os.environ.get("OLLAMA_URL", "http://localhost:11434/v1"), None, "OLLAMA_MODEL", "qwen2.5:7b"),
 }
-MIN_GAP = {"groq": 2.0, "gemini": 6.5, "mistral": 1.2, "openrouter": 3.2}  # stay under free-tier RPM limits
+MIN_GAP = {"groq": 2.0, "groq_small": 2.0, "gemini": 6.5, "mistral": 1.2, "openrouter": 3.2}  # stay under free-tier RPM limits
 COOLDOWN_S, MAX_WAIT_S, RATE_BUDGET_S = 60, 30, 600
 USAGE: dict[str, Any] = {"calls": 0, "input_tokens": 0, "output_tokens": 0, "providers": {}}
 _last: dict[str, float] = {}
@@ -27,7 +30,7 @@ _cooldown: dict[str, float] = {}
 
 
 def chain() -> list[str]:
-    names = [n.strip() for n in os.environ.get("LLM_CHAIN", "groq,gemini,openai,mistral,openrouter").split(",")]
+    names = [n.strip() for n in os.environ.get("LLM_CHAIN", "groq,groq_small,gemini,openai,mistral,openrouter").split(",")]
     return [n for n in names if n in PROVIDERS and ((key := PROVIDERS[n][1]) is None or os.environ.get(key))]
 
 
@@ -66,8 +69,8 @@ def complete(messages: list[dict], tools: list[dict] | None = None) -> tuple[Any
                     USAGE["providers"][name] = USAGE["providers"].get(name, 0) + 1
                     return r.choices[0].message, f"{name}:{model_of(name)}"
                 except openai.RateLimitError as e:
-                    if "insufficient_quota" in str(e) or "credit" in str(e).lower():
-                        errors.append(f"{name}: out of credits")
+                    if any(t in str(e) for t in ("insufficient_quota", "credit", "per day", "PerDay")):
+                        errors.append(f"{name}: daily quota or credits exhausted")
                         _cooldown[name] = time.time() + 3600
                         break
                     try:

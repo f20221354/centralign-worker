@@ -166,7 +166,7 @@ function describe(e) {
   switch (e.event_type) {
     case 'GOAL_CREATED': return `“${esc(p.goal)}”` + (Object.keys(p.scenario || {}).length ? ` <span class="muted">scenario: ${esc(Object.keys(p.scenario).join(', '))}</span>` : '');
     case 'GOAL_UNDERSTOOD': return `vendor <b>${esc(p.goal_spec.vendor_name)}</b> · ${esc(p.goal_spec.mode)} · approval above ${esc(p.approval_threshold)}`;
-    case 'ACTION_PROPOSED': return `<b>${esc(p.tool)}</b> <code>${esc(short(p.arguments, 120))}</code><br><span class="rationale">${esc(p.rationale)}</span>`;
+    case 'ACTION_PROPOSED': return `<b>${esc(p.tool)}</b> <code>${esc(short(p.arguments, 120))}</code><br><span class="rationale">${esc(p.rationale)}</span>${p.model ? ` <span class="muted" style="font-size:11px">· ${esc(p.model)}</span>` : ''}`;
     case 'ACTION_REJECTED': return `rejected at ${esc(p.stage)}: ${esc(p.errors)}`;
     case 'POLICY_EVALUATED': return `${esc(p.tool)} → <b>${esc(p.decision)}</b>${p.reason ? ' · ' + esc(p.reason) : ''}`;
     case 'ACTION_STARTED': return `${esc(p.tool)} via ${esc(p.channel)}${e.attempt_index > 1 ? ` · <b>attempt ${e.attempt_index}</b>` : ''}${p.side_effect ? ' · side effect, key <code>' + esc((p.idempotency_key || '').slice(0, 10)) + '…</code>' : ''}`;

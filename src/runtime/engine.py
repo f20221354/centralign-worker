@@ -143,7 +143,8 @@ class Engine:
         s.step_index += 1
         action_id = f"a{s.step_index}-{uuid.uuid4().hex[:6]}"
         self.ev(s, "ACTION_PROPOSED", {"action_id": action_id, "tool": raw.get("tool_name"),
-                                       "arguments": raw.get("arguments"), "rationale": raw.get("action_rationale")})
+                                       "arguments": raw.get("arguments"), "rationale": raw.get("action_rationale"),
+                                       "model": getattr(self.agent, "last_provider", None) or "planner"})
         # 1. validation: registered tool, typed arguments, nothing extra (e.g. no `human_approved`)
         try:
             prop = ActionProposal.model_validate(raw)
