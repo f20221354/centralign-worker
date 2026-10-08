@@ -22,7 +22,7 @@ h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute
 textarea{width:100%;min-height:64px;font:inherit;font-size:15px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;
 background:var(--bg);color:var(--fg);resize:vertical}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-button,select{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}
+select{max-width:100%}button,select{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}
 button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]) button.primary{color:#04201d}}
 button:disabled{opacity:.5;cursor:not-allowed}
@@ -56,7 +56,7 @@ code{font-family:var(--mono);font-size:12px;background:var(--bg);padding:1px 5px
 <header>
   <div class="brand">Centr<span>Align</span></div><div class="sub">Autonomous Task Worker · operator console</div>
   <nav><a href="/portal/" target="_blank">Vendor portal ↗</a><a href="/erp/invoices" target="_blank">Internal ERP ↗</a>
-  <a id="archLink" href="https://github.com/" target="_blank">Architecture ↗</a></nav>
+  <a href="/#architecture" target="_blank">Architecture ↗</a></nav>
 </header>
 <main>
   <section class="card">
@@ -121,7 +121,7 @@ code{font-family:var(--mono);font-size:12px;background:var(--bg);padding:1px 5px
 const $ = id => document.getElementById(id);
 let run = null, last = 0, examples = [], shotTick = 0, finished = false;
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const time = ts => new Date(ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+const time = ts => new Date(ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
 const short = (o, n = 160) => { const s = typeof o === 'string' ? o : JSON.stringify(o); return s.length > n ? s.slice(0, n) + '…' : s; };
 
 async function loadExamples() {
@@ -233,7 +233,7 @@ function render(d) {
     $('evidenceCard').hidden = false;
     $('summary').innerHTML = `<b>Worker's report:</b> ${esc(d.final_summary || '')}`;
     const ev = v.evidence;
-    $('evidenceKv').innerHTML = Object.entries({Vendor: ev.vendor, Invoice: ev.invoice, 'Invoice date': ev.invoice_date, Amount: ev.amount, 'Due date': ev.due_date, 'ERP record': ev.erp_record, Verification: ev.verification, Attempts: ev.tool_attempts, Approval: ev.approval})
+    $('evidenceKv').innerHTML = Object.entries({Vendor: ev.vendor, Invoice: ev.invoice, 'Invoice date': ev.invoice_date, Amount: ev.amount, 'Due date': ev.due_date, 'ERP record': ev.erp_record, Verification: ev.verification, 'Tool executions (incl. retries)': ev.tool_attempts, Approval: ev.approval})
       .map(([k, val]) => `<dt>${k}</dt><dd>${esc(val)}</dd>`).join('') + (ev.erp_url ? `<dt>ERP link</dt><dd><a href="${esc(ev.erp_url.replace(/^https?:\/\/[^/]+/, ''))}" target="_blank">open record ↗</a></dd>` : '');
     $('checks').innerHTML = v.checks.map(c => `<tr><td>${c.passed ? '✅' : '❌'}</td><td>${esc(c.name)}</td><td class="muted">${esc(c.detail)}</td></tr>`).join('');
   }
